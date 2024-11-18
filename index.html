@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Guess the Note</title>
+  <style>
+    #staff {
+      width: 600px;
+      position: relative;
+    }
+
+    .interval {
+      height: 14px;
+      background-color: white;
+    }
+
+    .line-top,
+    .line-bottom {
+      height: 3px;
+      background-color: white;
+    }
+
+    .line-top.short,
+    .line-bottom.short {
+      width: 20%;
+      margin: 0 auto;
+    }
+
+    .line-top {
+      border-bottom: 1px solid black;
+    }
+
+    .line-bottom {
+      border-top: 1px solid black;
+    }
+
+    .clef {
+      position: absolute;
+      top: 0px;
+      pointer-events: none;
+    }
+
+    .clef::before {
+      content: "𝄞";
+      font-size: 125px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .dot::after {
+      content: attr(data-note);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      color: white;
+    }
+ 
+    .dot {
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: black;
+      display: none;
+    }
+
+    #prompt {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    #feedback {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="prompt"></div>
+  <div id="staff">
+    <div class="clef"></div>
+    <div class="dot" id="dot"></div>
+  </div>
+  <div id="feedback"></div>
+  <script>
+    const notes = ['C4s', 'B4s', 'A4s', 'G3s', 'F3', 'E3', 'D3', 'C3', 'B3', 'A3', 'G2', 'F2', 'E2', 'D2s', 'C2s', 'B2s', 'A2s'];
+    const staff = document.getElementById('staff');
+
+    function add_lines(note) {
+      const lineTop = document.createElement('div');
+      lineTop.classList.add('line-top');
+      if (note.endsWith('s')) {
+        lineTop.classList.add('short');
+      }
+      lineTop.id = `${note}-line-top`;
+
+      const lineBottom = document.createElement('div');
+      lineBottom.classList.add('line-bottom');
+      if (note.endsWith('s')) {
+        lineBottom.classList.add('short');
+      }
+      lineBottom.id = `${note}-line-bottom`;
+      staff.appendChild(lineTop);
+      staff.appendChild(lineBottom);
+    }
+
+    function add_interval(note) {
+      const interval = document.createElement('div')
+      interval.classList.add('interval')
+      interval.id = `${note}-interval`;
+      staff.appendChild(interval);
+    }
+
+    notes.forEach((note, i) => {
+      if (i % 2 === 0) {
+        add_lines(note)
+      } else {
+        add_interval(note)
+      }
+    })
+
+    const promptElement = document.getElementById('prompt');
+    const feedbackElement = document.getElementById('feedback');
+    let correctNote = notes[Math.floor(Math.random() * notes.length)].substring(0, 2);
+    promptElement.textContent = `Find the note: ${correctNote}`;
+    const correctDots = []
+
+    staff.addEventListener('click', (event) => {
+      const clickedElement = event.target;
+      const guessedNote = clickedElement.id.substring(0, 2);
+
+      const dot = document.getElementById('dot')
+      dot.style.display = 'block';
+      dot.style.left = clickedElement.offsetLeft + clickedElement.offsetWidth / 2 + 'px';
+      dot.style.top = clickedElement.offsetTop + clickedElement.offsetHeight / 2 + 'px';
+      dot.dataset.note = guessedNote;
+
+      if (guessedNote === correctNote) {
+        const goodDot = dot.cloneNode(true);
+        dot.style.display = 'none';      
+        goodDot.style.backgroundColor = 'black'
+        staff.appendChild(goodDot)
+        correctDots.push(goodDot)
+
+        // Remove all but the last 5 dots
+        correctDots.slice(0, -5).forEach(dot => dot.remove());
+
+        feedbackElement.textContent = 'Correct!';
+        correctNote = notes[Math.floor(Math.random() * notes.length)].substring(0, 2);
+        promptElement.textContent = `Find the note: ${correctNote}`;
+
+
+      } else {
+        dot.style.backgroundColor = 'red';
+        feedbackElement.textContent = 'Incorrect. You clicked ' + guessedNote;
+      }
+    });
+  </script>
+</body>
+
+</html>
